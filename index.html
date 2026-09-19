@@ -63,8 +63,7 @@
   <section id="loginGate" aria-label="网站登录">
     <form class="login-card" id="loginForm">
       <div class="login-orbit">✦</div><p class="mono">GESTURA / PRIVATE ACCESS</p><h2>进入粒子宇宙</h2>
-      <p>请输入访问凭据，解锁手势驱动的互动体验。</p>
-      <label for="loginUser">用户名</label><input id="loginUser" autocomplete="username" required />
+      <p>请输入访问密码，解锁手势驱动的互动体验。</p>
       <label for="loginPass">密码</label><input id="loginPass" type="password" autocomplete="current-password" required />
       <button type="submit">进入体验</button><div class="login-error" id="loginError" role="alert"></div>
     </form>
@@ -91,7 +90,7 @@
     const loginGate=document.getElementById('loginGate'),loginForm=document.getElementById('loginForm'),loginError=document.getElementById('loginError');
     async function digest(text){const data=new TextEncoder().encode(text),hash=await crypto.subtle.digest('SHA-256',data);return [...new Uint8Array(hash)].map(v=>v.toString(16).padStart(2,'0')).join('')}
     if(sessionStorage.getItem('gestura-access')==='ok')loginGate.classList.add('done');
-    loginForm.addEventListener('submit',async event=>{event.preventDefault();const user=document.getElementById('loginUser').value.trim(),pass=document.getElementById('loginPass').value;if(await digest(`${user}:${pass}`)==='a37a9fe04a81544cbfedc714d3c7f50066f7cf7e27e573f129e71842a2e2229c'){sessionStorage.setItem('gestura-access','ok');loginGate.classList.add('done')}else loginError.textContent='用户名或密码不正确，请重试。'});
+    loginForm.addEventListener('submit',async event=>{event.preventDefault();const pass=document.getElementById('loginPass').value;if(await digest(pass)==='e485f271f7db87ad8888f40c7b00412cc0c97c9bbf35790e7ba85e08ff602860'){sessionStorage.setItem('gestura-access','ok');loginGate.classList.add('done')}else loginError.textContent='密码不正确，请重试。'});
     const stage = document.getElementById('stage');
     const mobileMode = matchMedia('(pointer:coarse)').matches && (navigator.maxTouchPoints > 0 || Math.min(innerWidth,innerHeight) < 900);
     const mobileParticleCap = 10000;
