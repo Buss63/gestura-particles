@@ -139,8 +139,8 @@ export class CompatParticleSimulation {
         const by = this.positions[offset3 + 1] - state.burstOrigin.y;
         const bz = this.positions[offset3 + 2] - state.burstOrigin.z;
         const burstDistance = Math.hypot(bx, by, bz);
-        if (burstDistance < 4.6) {
-          const power = state.burst * (1 - burstDistance / 4.6) * 0.18 / Math.max(burstDistance, 0.08);
+        if (burstDistance < 4.9) {
+          const power = state.burst * (1 - burstDistance / 4.9) * 0.34 / Math.max(burstDistance, 0.08);
           vx += bx * power;
           vy += by * power;
           vz += bz * power;

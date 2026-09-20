@@ -180,7 +180,8 @@ function handleGesture(event) {
   if (event.burst) {
     const tip = screenToWorld(event.tipX, event.tipY);
     runtime.burstOrigin.set(tip.x, tip.y, 0);
-    runtime.burst = 1;
+    runtime.burst = 1.65;
+    ui.pulseBurst();
   }
 }
 
@@ -238,7 +239,7 @@ function render() {
   runtime.scale += (runtime.targetScale - runtime.scale) * Math.min(1, delta * 13.5);
   runtime.rotationX += (runtime.targetRotationX - runtime.rotationX) * Math.min(1, delta * 6.8);
   runtime.rotationY += (runtime.targetRotationY - runtime.rotationY) * Math.min(1, delta * 6.8);
-  runtime.burst *= Math.exp(-delta * 4.7);
+  runtime.burst *= Math.exp(-delta * 3.2);
   runtime.handStrength *= Math.exp(-delta * 0.75);
   simulation.setRotation(runtime.rotationX, runtime.rotationY);
   simulation.update(delta, runtime);

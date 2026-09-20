@@ -39,7 +39,7 @@ export class GestureController {
     this.lastFrame = 0;
     this.failures = 0;
     this.lastSeen = 0;
-    this.lastBurst = 0;
+    this.lastBurst = -Infinity;
     this.candidateType = 'palm';
     this.candidateSince = 0;
     this.stableType = 'palm';
@@ -80,7 +80,7 @@ export class GestureController {
     const tipDistance = distance(landmarks[tipIndex], wrist);
     const pipDistance = distance(landmarks[pipIndex], wrist);
     const segmentStraightness = distance(landmarks[tipIndex], landmarks[mcpIndex]) / Math.max(0.001, distance(landmarks[pipIndex], landmarks[mcpIndex]));
-    return tipDistance > pipDistance * 1.08 && segmentStraightness > 1.35;
+    return tipDistance > pipDistance * 1.04 && segmentStraightness > 1.22;
   }
 
   classify(landmarks) {
@@ -96,9 +96,11 @@ export class GestureController {
     const rawOpenness = tipDistances.reduce((sum, value) => sum + value, 0) / tipDistances.length;
     const openness = clamp((rawOpenness - 1.05) / 0.92, 0, 1);
     const vSeparation = distance(landmarks[8], landmarks[12]) / palmSize;
-    const pointing = extended.index && !extended.middle && !extended.ring && !extended.pinky;
-    const victory = extended.index && extended.middle && !extended.ring && !extended.pinky && vSeparation > 0.28;
-    return { type: pointing ? 'point' : victory ? 'victory' : 'palm', openness };
+    const foldedOthers = [extended.middle, extended.ring, extended.pinky].filter(value => !value).length;
+    const foldedVictoryFingers = [extended.ring, extended.pinky].filter(value => !value).length;
+    const victory = extended.index && extended.middle && foldedVictoryFingers >= 1 && vSeparation > 0.24;
+    const pointing = extended.index && !extended.middle && foldedOthers >= 2;
+    return { type: victory ? 'victory' : pointing ? 'point' : 'palm', openness };
   }
 
   stabilize(candidate, now) {
@@ -106,7 +108,7 @@ export class GestureController {
       this.candidateType = candidate;
       this.candidateSince = now;
     }
-    const required = candidate === 'palm' ? 70 : 110;
+    const required = candidate === 'point' ? 70 : candidate === 'victory' ? 95 : 60;
     if (candidate !== this.stableType && now - this.candidateSince >= required) this.stableType = candidate;
     return this.stableType;
   }
@@ -150,7 +152,7 @@ export class GestureController {
       tipX: 1 - landmarks[8].x,
       tipY: landmarks[8].y
     };
-    if (type === 'point' && now - this.lastBurst > 780) {
+    if (type === 'point' && now - this.lastBurst > 860) {
       event.burst = true;
       this.lastBurst = now;
     }

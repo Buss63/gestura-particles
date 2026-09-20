@@ -96,10 +96,21 @@ export class UiController {
     document.getElementById('gestureIcon').textContent = ICONS[kind] || '✦';
     document.getElementById('gestureName').textContent = names[kind] || names.free;
     document.getElementById('gestureDetail').textContent = detail;
+    document.querySelectorAll('[data-gesture-kind]').forEach(item => {
+      item.classList.toggle('active', item.dataset.gestureKind.split(' ').includes(kind));
+    });
     if (kind === 'error') {
       this.cameraButton.disabled = false;
       this.cameraButton.textContent = '重新连接手势识别';
     }
+  }
+
+  pulseBurst() {
+    const card = document.querySelector('.gesture-card');
+    card.classList.remove('bursting');
+    void card.offsetWidth;
+    card.classList.add('bursting');
+    setTimeout(() => card.classList.remove('bursting'), 520);
   }
 
   async toggleFullscreen() {

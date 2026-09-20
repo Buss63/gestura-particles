@@ -81,12 +81,13 @@ const velocityFragment = `
     vec3 burstDelta = position - uBurstOrigin;
     float burstDistance = length(burstDelta);
     vec3 burstDirection = burstDelta / max(burstDistance, 0.08);
-    force += burstDirection * uBurst * (0.15 + noiseSeed * 0.24) * smoothstep(4.6, 0.0, burstDistance);
+    force += burstDirection * uBurst * (0.32 + noiseSeed * 0.46) * smoothstep(4.9, 0.0, burstDistance);
 
     velocity += force * min(uDelta * 60.0, 1.5);
     velocity *= pow(uDamping, min(uDelta * 60.0, 2.0));
     float speed = length(velocity);
-    if (speed > 0.34) velocity *= 0.34 / speed;
+    float speedLimit = mix(0.34, 0.76, clamp(uBurst, 0.0, 1.0));
+    if (speed > speedLimit) velocity *= speedLimit / speed;
     gl_FragColor = vec4(velocity, 1.0);
   }
 `;
