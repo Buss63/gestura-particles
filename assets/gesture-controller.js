@@ -40,6 +40,7 @@ export class GestureController {
     this.failures = 0;
     this.lastSeen = 0;
     this.lastBurst = -Infinity;
+    this.pointLatched = false;
     this.candidateType = 'palm';
     this.candidateSince = 0;
     this.stableType = 'palm';
@@ -152,10 +153,11 @@ export class GestureController {
       tipX: 1 - landmarks[8].x,
       tipY: landmarks[8].y
     };
-    if (type === 'point' && now - this.lastBurst > 860) {
+    if (type === 'point' && !this.pointLatched && now - this.lastBurst > 460) {
       event.burst = true;
       this.lastBurst = now;
     }
+    this.pointLatched = type === 'point';
     this.onGesture(event);
     if (type === 'point') this.onStatus('point', '单食指 · 指尖烟花');
     else if (type === 'victory') this.onStatus('victory', 'V 手势 · 摇摆旋转');

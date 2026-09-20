@@ -3,6 +3,7 @@ import { GpuParticleSimulation, detectGpuSimulation } from './gpu-simulation.js'
 import { CompatParticleSimulation } from './compat-simulation.js';
 import { GestureController } from './gesture-controller.js';
 import { UiController } from './ui-controller.js';
+import { FireworkSystem } from './firework-system.js';
 
 const THREE = window.THREE;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -67,6 +68,7 @@ scene.fog = new THREE.FogExp2(0x03030a, 0.034);
 const camera = new THREE.PerspectiveCamera(48, innerWidth / innerHeight, 0.1, 100);
 camera.position.set(0, 0, 6.3);
 const stars = createStarfield(scene, mobile);
+const fireworks = new FireworkSystem({ scene, mobile });
 
 let activeModel = 'saturn';
 let simulation;
@@ -174,8 +176,7 @@ function handleGesture(event) {
   }
   if (event.burst) {
     const tip = screenToWorld(event.tipX, event.tipY);
-    runtime.burstOrigin.set(tip.x, tip.y, 0);
-    runtime.burst = 1.65;
+    fireworks.burstAt(tip.x, tip.y, 0.12);
     ui.pulseBurst();
   }
 }
@@ -238,6 +239,7 @@ function render() {
   runtime.handStrength *= Math.exp(-delta * 0.75);
   simulation.setRotation(runtime.rotationX, runtime.rotationY);
   simulation.update(delta, runtime);
+  fireworks.update(delta);
   stars.rotation.y += delta * 0.009;
   stars.rotation.x += delta * 0.003;
   renderer.render(scene, camera);
