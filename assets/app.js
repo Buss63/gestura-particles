@@ -166,16 +166,11 @@ function handleGesture(event) {
   gestureActive = true;
   lastHandSeen = performance.now();
   runtime.targetScale = 0.22 + clamp(event.openness, 0, 1) * 1.28;
-  const world = screenToWorld(event.x, event.y);
-  runtime.hand.set(world.x, world.y, 0);
-  runtime.handVelocity.set(event.velocityX * 0.36, -event.velocityY * 0.36);
+  runtime.handStrength = 0;
   if (event.type === 'victory') {
     const limit = modelRotationLimit();
     runtime.targetRotationY += event.rotateY;
     runtime.targetRotationX = clamp(runtime.targetRotationX + event.rotateX, -1.05 * limit, 1.05 * limit);
-    runtime.handStrength = 0.08;
-  } else {
-    runtime.handStrength = event.type === 'palm' ? 1 : 0.28;
   }
   if (event.burst) {
     const tip = screenToWorld(event.tipX, event.tipY);
@@ -191,7 +186,7 @@ gestureController = new GestureController({
   onGesture: handleGesture,
   onStatus: (kind, detail) => {
     ui.setGesture(kind, detail);
-    const status = { loading: '加载手势模块', searching: '正在寻找手掌', point: '食指烟花已锁定', victory: '双指旋转已锁定', closed: '手掌聚合', open: '手掌扰动', error: '手势识别不可用' };
+    const status = { loading: '加载手势模块', searching: '正在寻找手掌', point: '食指烟花已锁定', victory: '双指旋转已锁定', closed: '手掌聚合', open: '手掌展开', error: '手势识别不可用' };
     ui.setSystemStatus(status[kind] || '手势控制');
   }
 });

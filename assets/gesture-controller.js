@@ -160,7 +160,7 @@ export class GestureController {
     if (type === 'point') this.onStatus('point', '单食指 · 指尖烟花');
     else if (type === 'victory') this.onStatus('victory', 'V 手势 · 摇摆旋转');
     else if (this.smooth.openness < 0.38) this.onStatus('closed', '握拳 · 粒子聚合');
-    else this.onStatus('open', '张掌 · 粒子展开并扰动');
+    else this.onStatus('open', '张掌 · 粒子展开');
   }
 
   async start() {
