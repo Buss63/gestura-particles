@@ -1,6 +1,6 @@
 import { MODEL_META } from './model-library.js';
 
-const ICONS = { loading: '⌁', searching: '⌁', point: '✹', victory: 'V', closed: '✦', open: '✋', error: '!', free: '✦' };
+const ICONS = { loading: '⌁', searching: '⌁', thumb: '👍', point: '✹', victory: 'V', closed: '✦', open: '✋', error: '!', free: '✦' };
 
 export class UiController {
   constructor({ mobile, onModel, onDensity, onColor, onGlow, onCamera }) {
@@ -92,7 +92,7 @@ export class UiController {
   }
 
   setGesture(kind, detail) {
-    const names = { loading: '加载手势模块', searching: '正在寻找手掌', point: '食指烟花', victory: '双指旋转', closed: '粒子聚合', open: '手掌展开', error: '手势模块未连接', free: '自由漫游' };
+    const names = { loading: '加载手势模块', searching: '正在寻找手掌', thumb: '大拇指干扰', point: '食指烟花', victory: '双指旋转', closed: '粒子聚合', open: '手掌展开', error: '手势模块未连接', free: '自由漫游' };
     document.getElementById('gestureIcon').textContent = ICONS[kind] || '✦';
     document.getElementById('gestureName').textContent = names[kind] || names.free;
     document.getElementById('gestureDetail').textContent = detail;

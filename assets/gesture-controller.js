@@ -88,6 +88,7 @@ export class GestureController {
     const wrist = landmarks[0];
     const palmSize = Math.max(0.001, distance(landmarks[9], wrist));
     const extended = {
+      thumb: this.fingerExtended(landmarks, 4, 3, 2),
       index: this.fingerExtended(landmarks, 8, 6, 5),
       middle: this.fingerExtended(landmarks, 12, 10, 9),
       ring: this.fingerExtended(landmarks, 16, 14, 13),
@@ -96,12 +97,15 @@ export class GestureController {
     const tipDistances = [4, 8, 12, 16, 20].map(index => distance(landmarks[index], wrist) / palmSize);
     const rawOpenness = tipDistances.reduce((sum, value) => sum + value, 0) / tipDistances.length;
     const openness = clamp((rawOpenness - 1.05) / 0.92, 0, 1);
+    const thumbReach = distance(landmarks[4], wrist) / palmSize;
+    const thumbStrength = clamp((thumbReach - 0.72) / 0.78, 0, 1);
     const vSeparation = distance(landmarks[8], landmarks[12]) / palmSize;
     const foldedOthers = [extended.middle, extended.ring, extended.pinky].filter(value => !value).length;
     const foldedVictoryFingers = [extended.ring, extended.pinky].filter(value => !value).length;
     const victory = extended.index && extended.middle && foldedVictoryFingers >= 1 && vSeparation > 0.24;
     const pointing = extended.index && !extended.middle && foldedOthers >= 2;
-    return { type: victory ? 'victory' : pointing ? 'point' : 'palm', openness };
+    const thumbOnly = extended.thumb && !extended.index && !extended.middle && !extended.ring && !extended.pinky && thumbStrength > 0.28;
+    return { type: thumbOnly ? 'thumb' : victory ? 'victory' : pointing ? 'point' : 'palm', openness, thumbStrength };
   }
 
   stabilize(candidate, now) {
@@ -109,7 +113,7 @@ export class GestureController {
       this.candidateType = candidate;
       this.candidateSince = now;
     }
-    const required = candidate === 'point' ? 70 : candidate === 'victory' ? 95 : 60;
+    const required = candidate === 'point' ? 70 : candidate === 'victory' ? 95 : candidate === 'thumb' ? 75 : 60;
     if (candidate !== this.stableType && now - this.candidateSince >= required) this.stableType = candidate;
     return this.stableType;
   }
@@ -127,11 +131,12 @@ export class GestureController {
     this.lastSeen = now;
     const classification = this.classify(landmarks);
     const type = this.stabilize(classification.type, now);
-    const rawX = 1 - landmarks[9].x;
-    const rawY = landmarks[9].y;
+    const controlPoint = type === 'thumb' ? landmarks[4] : landmarks[9];
+    const rawX = 1 - controlPoint.x;
+    const rawY = controlPoint.y;
     const previousX = this.smooth.x;
     const previousY = this.smooth.y;
-    const positionSmoothing = type === 'victory' ? 0.32 : 0.46;
+    const positionSmoothing = type === 'victory' ? 0.32 : type === 'thumb' ? 0.56 : 0.46;
     this.smooth.x += (rawX - this.smooth.x) * positionSmoothing;
     this.smooth.y += (rawY - this.smooth.y) * positionSmoothing;
     this.smooth.openness += (classification.openness - this.smooth.openness) * 0.44;
@@ -143,6 +148,7 @@ export class GestureController {
       active: true,
       type,
       openness: this.smooth.openness,
+      thumbStrength: classification.thumbStrength || 0,
       x: this.smooth.x,
       y: this.smooth.y,
       velocityX,
@@ -159,7 +165,8 @@ export class GestureController {
     }
     this.pointLatched = type === 'point';
     this.onGesture(event);
-    if (type === 'point') this.onStatus('point', '单食指 · 指尖烟花');
+    if (type === 'thumb') this.onStatus('thumb', '大拇指 · 局部粒子干扰');
+    else if (type === 'point') this.onStatus('point', '单食指 · 指尖烟花');
     else if (type === 'victory') this.onStatus('victory', 'V 手势 · 摇摆旋转');
     else if (this.smooth.openness < 0.38) this.onStatus('closed', '握拳 · 粒子聚合');
     else this.onStatus('open', '张掌 · 粒子展开');

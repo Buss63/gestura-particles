@@ -156,8 +156,14 @@ function modelRotationLimit() {
   return MODEL_META.find(model => model.id === activeModel)?.rotationLimit ?? 1;
 }
 
-function screenToWorld(x, y) {
-  return { x: (x - 0.5) * 5.4, y: -(y - 0.5) * 3.5 };
+const projectionPoint = new THREE.Vector3();
+const projectionDirection = new THREE.Vector3();
+function screenToWorld(x, y, planeZ = 0) {
+  projectionPoint.set(x * 2 - 1, 1 - y * 2, 0.5).unproject(camera);
+  projectionDirection.copy(projectionPoint).sub(camera.position).normalize();
+  const distanceToPlane = (planeZ - camera.position.z) / projectionDirection.z;
+  projectionPoint.copy(camera.position).add(projectionDirection.multiplyScalar(distanceToPlane));
+  return projectionPoint;
 }
 
 function handleGesture(event) {
@@ -167,16 +173,22 @@ function handleGesture(event) {
   }
   gestureActive = true;
   lastHandSeen = performance.now();
-  runtime.targetScale = 0.22 + clamp(event.openness, 0, 1) * 1.28;
+  if (event.type !== 'thumb') runtime.targetScale = 0.22 + clamp(event.openness, 0, 1) * 1.28;
   runtime.handStrength = 0;
   if (event.type === 'victory') {
     const limit = modelRotationLimit();
     runtime.targetRotationY += event.rotateY;
     runtime.targetRotationX = clamp(runtime.targetRotationX + event.rotateX, -1.05 * limit, 1.05 * limit);
   }
+  if (event.type === 'thumb') {
+    const center = screenToWorld(event.x, event.y, 0.08);
+    runtime.hand.copy(center);
+    runtime.handVelocity.set(event.velocityX * 0.58, -event.velocityY * 0.58);
+    runtime.handStrength = 0.7 + clamp(event.thumbStrength, 0, 1) * 1.15;
+  }
   if (event.burst) {
-    const tip = screenToWorld(event.tipX, event.tipY);
-    fireworks.burstAt(tip.x, tip.y, 0.12);
+    const tip = screenToWorld(event.tipX, event.tipY, 0.12);
+    fireworks.burstAt(tip.x, tip.y, tip.z);
     ui.pulseBurst();
   }
 }
@@ -187,7 +199,7 @@ gestureController = new GestureController({
   onGesture: handleGesture,
   onStatus: (kind, detail) => {
     ui.setGesture(kind, detail);
-    const status = { loading: '加载手势模块', searching: '正在寻找手掌', point: '食指烟花已锁定', victory: '双指旋转已锁定', closed: '手掌聚合', open: '手掌展开', error: '手势识别不可用' };
+    const status = { loading: '加载手势模块', searching: '正在寻找手掌', thumb: '大拇指干扰已锁定', point: '食指烟花已锁定', victory: '双指旋转已锁定', closed: '手掌聚合', open: '手掌展开', error: '手势识别不可用' };
     ui.setSystemStatus(status[kind] || '手势控制');
   }
 });

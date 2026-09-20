@@ -46,15 +46,15 @@ const fragmentShader = `
     vec2 centered = gl_PointCoord - 0.5;
     float radius = length(centered);
     if (radius > 0.5) discard;
-    float core = smoothstep(0.5, 0.02, radius);
-    float halo = smoothstep(0.5, 0.14, radius) * 0.48;
+    float core = smoothstep(0.5, 0.015, radius);
+    float halo = smoothstep(0.5, 0.135, radius) * 0.86;
     float fadeIn = smoothstep(0.0, 0.06, vLife);
-    float fadeOut = 1.0 - smoothstep(0.48, 1.0, vLife);
-    float trailFade = 1.0 - vTrail * 0.72;
+    float fadeOut = 1.0 - smoothstep(0.58, 1.0, vLife);
+    float trailFade = 1.0 - vTrail * 0.66;
     float hue = fract(uHue + (vSeed - 0.5) * 0.18 + vTrail * 0.025);
     vec3 color = hsl2rgb(vec3(hue, 0.96, 0.66 + vSeed * 0.2));
     float alpha = (core + halo) * fadeIn * fadeOut * trailFade;
-    gl_FragColor = vec4(color * (1.35 + core * 1.2), alpha);
+    gl_FragColor = vec4(color * (2.15 + core * 2.25), alpha);
   }
 `;
 
@@ -66,8 +66,8 @@ function randomDirection() {
 }
 
 function createGeometry(mobile) {
-  const sparkCount = mobile ? 110 : 190;
-  const trailSegments = mobile ? 4 : 5;
+  const sparkCount = mobile ? 240 : 420;
+  const trailSegments = mobile ? 6 : 7;
   const count = sparkCount * trailSegments;
   const positions = new Float32Array(count * 3);
   const directions = new Float32Array(count * 3);
@@ -80,7 +80,13 @@ function createGeometry(mobile) {
     direction.y += (Math.random() - 0.5) * 0.08;
     direction.z += (Math.random() - 0.5) * 0.08;
     direction.normalize();
-    const speed = 1.72 + Math.pow(Math.random(), 0.42) * 2.25;
+    direction.z *= 0.34;
+    const sparkRatio = spark / sparkCount;
+    const speed = sparkRatio < 0.12
+      ? 0.24 + Math.random() * 0.88
+      : sparkRatio < 0.42
+        ? 3.15 + Math.random() * 1.15
+        : 5.1 + Math.pow(Math.random(), 0.38) * 2.5;
     const seed = Math.random();
     for (let trail = 0; trail < trailSegments; trail += 1) {
       const index = spark * trailSegments + trail;
@@ -102,7 +108,7 @@ function createGeometry(mobile) {
 export class FireworkSystem {
   constructor({ scene, mobile }) {
     this.scene = scene;
-    this.duration = 1.65;
+    this.duration = 2.2;
     this.geometry = createGeometry(mobile);
     this.palette = [0.01, 0.08, 0.47, 0.55, 0.72, 0.86, 0.94];
     this.slots = Array.from({ length: mobile ? 2 : 3 }, () => this.createSlot(mobile));
@@ -116,7 +122,7 @@ export class FireworkSystem {
         uOrigin: { value: new THREE.Vector3() },
         uAge: { value: 0 },
         uDuration: { value: this.duration },
-        uPointSize: { value: mobile ? 0.105 : 0.09 },
+        uPointSize: { value: mobile ? 0.175 : 0.155 },
         uHue: { value: 0.55 }
       },
       transparent: true,
